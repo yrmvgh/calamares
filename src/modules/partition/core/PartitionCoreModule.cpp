@@ -97,7 +97,6 @@ isIso9660( const Device* device )
 PartitionCoreModule::DeviceInfo::DeviceInfo( Device* _device )
     : device( _device )
     , partitionModel( new PartitionModel )
-    , immutableDevice( new Device( *_device ) )
 {}
 
 PartitionCoreModule::DeviceInfo::~DeviceInfo()
@@ -236,7 +235,7 @@ PartitionCoreModule::bootLoaderModel() const
 }
 
 PartitionModel*
-PartitionCoreModule::partitionModelForDevice( const Device* device ) const
+PartitionCoreModule::partitionModelForDevice( Device* device ) const
 {
     DeviceInfo* info = infoForDevice( device );
     Q_ASSERT( info );
@@ -245,14 +244,14 @@ PartitionCoreModule::partitionModelForDevice( const Device* device ) const
 
 
 Device*
-PartitionCoreModule::immutableDeviceCopy( const Device* device )
+PartitionCoreModule::createImmutableDeviceCopy( Device* device )
 {
-    Q_ASSERT( device );
-    DeviceInfo* info = infoForDevice( device );
-    if ( !info )
-        return nullptr;
+    CoreBackend* backend = CoreBackendManager::self()->backend();
 
-    return info->immutableDevice.data();
+    QString node = device->deviceNode();
+    cDebug() << "Creating immutable copy for node:" << node;
+    Device* deviceBefore = backend->scanDevice( node );
+    return deviceBefore;
 }
 
 
@@ -582,15 +581,12 @@ PartitionCoreModule::scanForEfiSystemPartitions()
 }
 
 PartitionCoreModule::DeviceInfo*
-PartitionCoreModule::infoForDevice( const Device* device ) const
+PartitionCoreModule::infoForDevice( Device* device ) const
 {
-    for ( auto it = m_deviceInfos.constBegin();
-          it != m_deviceInfos.constEnd(); ++it )
+    for ( auto deviceInfo : m_deviceInfos )
     {
-        if ( ( *it )->device.data() == device )
-            return *it;
-        if ( ( *it )->immutableDevice.data() == device )
-            return *it;
+        if ( deviceInfo->device.data() == device )
+            return deviceInfo;
     }
     return nullptr;
 }
@@ -700,6 +696,7 @@ QList< PartitionCoreModule::SummaryInfo >
 PartitionCoreModule::createSummaryInfo() const
 {
     QList< SummaryInfo > lst;
+    CoreBackend* backend = CoreBackendManager::self()->backend();
     for ( auto deviceInfo : m_deviceInfos )
     {
         if ( !deviceInfo->isDirty() )
@@ -708,7 +705,7 @@ PartitionCoreModule::createSummaryInfo() const
         summaryInfo.deviceName = deviceInfo->device->name();
         summaryInfo.deviceNode = deviceInfo->device->deviceNode();
 
-        Device* deviceBefore = deviceInfo->immutableDevice.data();
+        Device* deviceBefore = backend->scanDevice( deviceInfo->device->deviceNode() );
         summaryInfo.partitionModelBefore = new PartitionModel;
         summaryInfo.partitionModelBefore->init( deviceBefore, m_osproberLines );
         // Make deviceBefore a child of partitionModelBefore so that it is not

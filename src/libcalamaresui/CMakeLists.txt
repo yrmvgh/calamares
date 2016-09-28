@@ -1,7 +1,6 @@
 set( CALAMARESUI_LIBRARY_TARGET calamaresui )
 
 list( APPEND ${CALAMARESUI_LIBRARY_TARGET}_SOURCES
-    modulesystem/CppJobModule.cpp
     modulesystem/Module.cpp
     modulesystem/ModuleManager.cpp
     modulesystem/ProcessJobModule.cpp
@@ -14,6 +13,8 @@ list( APPEND ${CALAMARESUI_LIBRARY_TARGET}_SOURCES
 
     utils/qjsonmodel.cpp
     utils/qjsonitem.cpp
+
+    utils/PluginFactory.cpp
 
     viewpages/AbstractPage.cpp
     viewpages/ViewStep.cpp

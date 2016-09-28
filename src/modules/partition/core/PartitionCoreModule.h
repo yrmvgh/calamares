@@ -68,7 +68,7 @@ public:
 
     DeviceModel* deviceModel() const;
 
-    PartitionModel* partitionModelForDevice( const Device* device ) const;
+    PartitionModel* partitionModelForDevice( Device* device ) const;
 
     //HACK: all devices change over time, and together make up the state of the CoreModule.
     //      However this makes it hard to show the *original* state of a device.
@@ -77,7 +77,7 @@ public:
     //      This should probably be redone some other way.
     //              -- Teo 4/2015
     //FIXME: make this horrible method private. -- Teo 12/2015
-    Device* immutableDeviceCopy( const Device* device );
+    static Device* createImmutableDeviceCopy( Device* device );
 
     QAbstractItemModel* bootLoaderModel() const;
 
@@ -147,7 +147,6 @@ private:
         ~DeviceInfo();
         QScopedPointer< Device > device;
         QScopedPointer< PartitionModel > partitionModel;
-        const QScopedPointer< Device > immutableDevice;
         QList< Calamares::job_ptr > jobs;
 
         void forgetChanges();
@@ -167,7 +166,7 @@ private:
     void updateIsDirty();
     void scanForEfiSystemPartitions();
 
-    DeviceInfo* infoForDevice( const Device* ) const;
+    DeviceInfo* infoForDevice( Device* ) const;
 
     OsproberEntryList m_osproberLines;
 
